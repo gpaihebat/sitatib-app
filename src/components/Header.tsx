@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogin,
 }) => {
   const getRoleBadge = (role?: string) => {
-    switch (role) {
+    switch (role?.toUpperCase()) {
       case 'ADMIN':
         return 'bg-red-600 text-white';
       case 'TIM TATIB':
@@ -63,6 +63,9 @@ export const Header: React.FC<HeaderProps> = ({
               <Play className="w-3.5 h-3.5" />
               <span>Simulasi Web App</span>
             </button>
+            {(!currentUser || currentUser.role.toUpperCase() === 'ADMIN') && (
+              <>
+
             <button
               onClick={() => setActiveTab('gascode')}
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
@@ -85,7 +88,8 @@ export const Header: React.FC<HeaderProps> = ({
               <BookOpen className="w-3.5 h-3.5" />
               <span>Panduan Setup</span>
             </button>
-          </div>
+          </>
+          )}</div>
 
           {/* User Status / Login Logout */}
           <div className="flex items-center space-x-3">
@@ -132,8 +136,11 @@ export const Header: React.FC<HeaderProps> = ({
             <Play className="w-3 h-3" />
             <span>Simulasi App</span>
           </button>
-          <button
-            onClick={() => setActiveTab('gascode')}
+          {(!currentUser || currentUser.role.toUpperCase() === 'ADMIN') && (
+              <>
+
+            <button
+              onClick={() => setActiveTab('gascode')}
             className={`flex items-center space-x-1 py-1 px-2 rounded ${
               activeTab === 'gascode' ? 'text-blue-400 font-bold' : 'text-slate-400'
             }`}
@@ -150,7 +157,8 @@ export const Header: React.FC<HeaderProps> = ({
             <BookOpen className="w-3 h-3" />
             <span>Panduan</span>
           </button>
-        </div>
+          </>
+          )}</div>
       </div>
     </header>
   );

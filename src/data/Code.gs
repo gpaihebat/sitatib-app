@@ -43,9 +43,22 @@ function doOptions(e) {
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
+
+function getSheetSafely(ss, name) {
+  var sheet = ss.getSheetByName(name);
+  if (sheet) return sheet;
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName().trim().toLowerCase() === name.trim().toLowerCase()) {
+      return sheets[i];
+    }
+  }
+  throw new Error("Sheet '" + name + "' tidak ditemukan. Pastikan nama sheet sudah benar!");
+}
+
 function loginUser(username, password) {
   var ss = getSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAMES.USERS);
+  var sheet = getSheetSafely(ss, SHEET_NAMES.USERS);
   var data = sheet.getDataRange().getValues();
   
   for (var i = 1; i < data.length; i++) {
@@ -76,7 +89,7 @@ function getInitialData(userRole) {
   var ss = getSpreadsheet();
   
   // Ambil Data Siswa
-  var sheetSiswa = ss.getSheetByName(SHEET_NAMES.SISWA);
+  var sheetSiswa = getSheetSafely(ss, SHEET_NAMES.SISWA);
   var dataSiswa = sheetSiswa.getDataRange().getValues();
   var listSiswa = [];
   for (var i = 1; i < dataSiswa.length; i++) {
@@ -93,7 +106,7 @@ function getInitialData(userRole) {
   }
   
   // Ambil Data Kategori
-  var sheetKategori = ss.getSheetByName(SHEET_NAMES.KATEGORI);
+  var sheetKategori = getSheetSafely(ss, SHEET_NAMES.KATEGORI);
   var dataKategori = sheetKategori.getDataRange().getValues();
   var listKategori = [];
   for (var j = 1; j < dataKategori.length; j++) {
@@ -109,7 +122,7 @@ function getInitialData(userRole) {
   }
   
   // Ambil Data Log
-  var sheetLog = ss.getSheetByName(SHEET_NAMES.LOG);
+  var sheetLog = getSheetSafely(ss, SHEET_NAMES.LOG);
   var dataLog = sheetLog.getDataRange().getValues();
   var listLog = [];
   for (var k = 1; k < dataLog.length; k++) {
@@ -138,8 +151,8 @@ function getInitialData(userRole) {
 
 function tambahPelanggaran(payload) {
   var ss = getSpreadsheet();
-  var sheetSiswa = ss.getSheetByName(SHEET_NAMES.SISWA);
-  var sheetLog = ss.getSheetByName(SHEET_NAMES.LOG);
+  var sheetSiswa = getSheetSafely(ss, SHEET_NAMES.SISWA);
+  var sheetLog = getSheetSafely(ss, SHEET_NAMES.LOG);
   
   var dataSiswa = sheetSiswa.getDataRange().getValues();
   var rowIndex = -1;
@@ -166,8 +179,8 @@ function tambahPelanggaran(payload) {
 
 function kurangiPelanggaran(payload) {
   var ss = getSpreadsheet();
-  var sheetSiswa = ss.getSheetByName(SHEET_NAMES.SISWA);
-  var sheetLog = ss.getSheetByName(SHEET_NAMES.LOG);
+  var sheetSiswa = getSheetSafely(ss, SHEET_NAMES.SISWA);
+  var sheetLog = getSheetSafely(ss, SHEET_NAMES.LOG);
   
   var dataSiswa = sheetSiswa.getDataRange().getValues();
   var rowIndex = -1;
@@ -196,7 +209,7 @@ function kurangiPelanggaran(payload) {
 
 function tambahSiswa(payload) {
   var ss = getSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAMES.SISWA);
+  var sheet = getSheetSafely(ss, SHEET_NAMES.SISWA);
   var data = sheet.getDataRange().getValues();
   
   for (var i = 1; i < data.length; i++) {

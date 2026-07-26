@@ -502,6 +502,7 @@ export default function App() {
       {/* Modals */}
       <LoginModal
         isOpen={isLoginModalOpen}
+        isLoading={isLoading}
         onClose={() => setIsLoginModalOpen(false)}
         
         onLoginSubmit={(username, password) => handleApiLogin(username, password)}

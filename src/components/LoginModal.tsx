@@ -3,6 +3,7 @@ import { User } from '../types';
 import { GraduationCap, Lock, User as UserIcon, LogIn, KeyRound, AlertCircle } from 'lucide-react';
 
 interface LoginModalProps {
+  isLoading?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onLoginSubmit: (u: string, p: string) => void;
@@ -13,6 +14,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   
   onLoginSubmit,
+  isLoading,
 }) => {
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
@@ -97,10 +99,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 flex items-center justify-center space-x-2 mt-2"
+              disabled={isLoading}
+              className={`w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 flex items-center justify-center space-x-2 mt-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              <LogIn className="w-4 h-4" />
-              <span>Masuk Aplikasi</span>
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <LogIn className="w-4 h-4" />
+              )}
+              <span>{isLoading ? 'Memuat...' : 'Masuk Aplikasi'}</span>
             </button>
           </form>
         </div>

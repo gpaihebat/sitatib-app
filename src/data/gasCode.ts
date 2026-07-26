@@ -2,36 +2,34 @@ export const PANDUAN_SETUP_TEXT = `PANDUAN LENGKAP DEPLOY SITATIB (REACT + GOOGL
 
 Aplikasi ini menggunakan Frontend React.js yang di-hosting di GitHub Pages (atau hosting statis lainnya) dan Google Apps Script (GAS) sebagai Database API (Backend).
 
-LANGKAH 1: SETUP BACKEND (DATABASE & API)
-1. Buka Google Spreadsheet baru atau yang lama, pastikan memiliki sheet: Users, Siswa, Kategori, LogData.
-2. Klik menu Ekstensi > Apps Script.
-3. Hapus kode yang ada, copy paste seluruh isi file 'src/data/Code.gs' (Bisa dicopy dari menu Panduan) ke dalam editor Apps Script.
-4. Klik tombol Simpan (ikon disket).
-5. Klik Terapkan (Deploy) > Deployment Baru.
-6. Pilih jenis: Aplikasi Web.
+LANGKAH 1: SETUP DATABASE GOOGLE SHEETS
+1. Buat Google Spreadsheet baru.
+2. Buat 4 Sheet dengan nama persis sebagai berikut:
+   - "Users": Berisi kolom (Header Baris 1): ID | Username | Password | Nama | Role | Jabatan | NIP
+     (Role diisi: ADMIN, TIM TATIB, atau GURU. Jabatan diisi: Wali Kelas, Tim Tatib, Guru BK, dll)
+   - "Siswa": Berisi kolom: NIS | Nama Siswa | Kelas | Total Poin | Wali Kelas
+   - "Kategori": Berisi kolom: ID Pelanggaran | Nama Pelanggaran | Bobot Poin | Keterangan
+   - "LogData": Berisi kolom: Timestamp | NIS | Nama Siswa | Jenis Pelanggaran | Poin Ditambahkan/Dikurangi | Keterangan | Nama Petugas | Role Petugas
+
+LANGKAH 2: SETUP BACKEND (DATABASE & API)
+1. Klik menu Ekstensi > Apps Script di Google Sheets Anda.
+2. Hapus kode yang ada, copy paste seluruh isi file 'Code.gs' (dari Tab Kode Backend GAS) ke dalam editor Apps Script.
+3. Klik tombol Simpan (ikon disket).
+4. Klik Terapkan (Deploy) > Deployment Baru.
+5. Pilih jenis: Aplikasi Web.
    - Deskripsi: "API SITATIB v1"
    - Jalankan sebagai: "Saya" (Me)
-   - Siapa yang memiliki akses: "Semua Orang" (Anyone) -> INI SANGAT PENTING (agar terhindar dari CORS).
-7. Klik Terapkan (Deploy), berikan izin otorisasi jika diminta.
-8. Salin URL Aplikasi Web yang dihasilkan (berawalan https://script.google.com/macros/s/.../exec).
+   - Siapa yang memiliki akses: "Semua Orang" (Anyone) -> INI SANGAT PENTING (agar bisa diakses Frontend tanpa error CORS).
+6. Klik Terapkan (Deploy), dan setujui otorisasi akun Google (Advanced -> Go to Project).
+7. Salin URL Aplikasi Web yang dihasilkan (berawalan https://script.google.com/macros/s/.../exec).
+8. PASTIKAN UNTUK SELALU MENGGUNAKAN "New Version" jika Anda mengupdate kode Apps Script nantinya.
 
-LANGKAH 2: HUBUNGKAN FRONTEND
-1. Buka file .env di project React Anda (jika belum ada, buat file '.env' di folder root).
-2. Tambahkan variabel ini:
-   VITE_GAS_URL=URL_YANG_ANDA_SALIN_DARI_LANGKAH_1
-3. Simpan file .env. (Aplikasi otomatis beralih menggunakan backend tersebut).
+LANGKAH 3: UPDATE URL API DI FRONTEND
+- Untuk mengupdate URL tanpa build ulang, karena aplikasi sudah di-deploy:
+  Jika Anda mengclone repo ini, masukkan URL tersebut ke variabel 'const GAS_URL = "URL_ANDA"' di dalam file 'src/services/api.ts' baris 4.
 
-LANGKAH 3: DEPLOY KE GITHUB PAGES
-1. Buka package.json, tambahkan "homepage": "https://<username-github>.github.io/<nama-repo>" di bagian atas.
-2. Pastikan sudah ada script deploy:
-   "predeploy": "npm run build",
-   "deploy": "gh-pages -d dist"
-3. Instal gh-pages (jika belum):
-   npm install gh-pages --save-dev
-4. Jalankan perintah deploy:
-   npm run deploy
-5. Di pengaturan Repository GitHub > Pages, set source ke branch 'gh-pages'.
-6. Aplikasi Anda sudah online dan terhubung dengan Google Sheets secara realtime!
+CATATAN GAGAL MEMUAT DATA:
+- Jika saat login atau membuka aplikasi Anda menemui gagal memuat data atau error "getDataRange", pastikan nama ke-4 Sheet Anda (Users, Siswa, Kategori, LogData) sudah persis sesuai, tidak ada typo atau spasi ekstra di nama sheet-nya.
 `;
 
 export const GAS_FILES = [
@@ -84,9 +82,22 @@ function doOptions(e) {
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
+
+function getSheetSafely(ss, name) {
+  var sheet = ss.getSheetByName(name);
+  if (sheet) return sheet;
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName().trim().toLowerCase() === name.trim().toLowerCase()) {
+      return sheets[i];
+    }
+  }
+  throw new Error("Sheet '" + name + "' tidak ditemukan. Pastikan nama sheet sudah benar!");
+}
+
 function loginUser(username, password) {
   var ss = getSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAMES.USERS);
+  var sheet = getSheetSafely(ss, SHEET_NAMES.USERS);
   var data = sheet.getDataRange().getValues();
   
   for (var i = 1; i < data.length; i++) {
@@ -117,7 +128,7 @@ function getInitialData(userRole) {
   var ss = getSpreadsheet();
   
   // Ambil Data Siswa
-  var sheetSiswa = ss.getSheetByName(SHEET_NAMES.SISWA);
+  var sheetSiswa = getSheetSafely(ss, SHEET_NAMES.SISWA);
   var dataSiswa = sheetSiswa.getDataRange().getValues();
   var listSiswa = [];
   for (var i = 1; i < dataSiswa.length; i++) {
@@ -134,7 +145,7 @@ function getInitialData(userRole) {
   }
   
   // Ambil Data Kategori
-  var sheetKategori = ss.getSheetByName(SHEET_NAMES.KATEGORI);
+  var sheetKategori = getSheetSafely(ss, SHEET_NAMES.KATEGORI);
   var dataKategori = sheetKategori.getDataRange().getValues();
   var listKategori = [];
   for (var j = 1; j < dataKategori.length; j++) {
@@ -150,7 +161,7 @@ function getInitialData(userRole) {
   }
   
   // Ambil Data Log
-  var sheetLog = ss.getSheetByName(SHEET_NAMES.LOG);
+  var sheetLog = getSheetSafely(ss, SHEET_NAMES.LOG);
   var dataLog = sheetLog.getDataRange().getValues();
   var listLog = [];
   for (var k = 1; k < dataLog.length; k++) {
@@ -179,8 +190,8 @@ function getInitialData(userRole) {
 
 function tambahPelanggaran(payload) {
   var ss = getSpreadsheet();
-  var sheetSiswa = ss.getSheetByName(SHEET_NAMES.SISWA);
-  var sheetLog = ss.getSheetByName(SHEET_NAMES.LOG);
+  var sheetSiswa = getSheetSafely(ss, SHEET_NAMES.SISWA);
+  var sheetLog = getSheetSafely(ss, SHEET_NAMES.LOG);
   
   var dataSiswa = sheetSiswa.getDataRange().getValues();
   var rowIndex = -1;
@@ -207,8 +218,8 @@ function tambahPelanggaran(payload) {
 
 function kurangiPelanggaran(payload) {
   var ss = getSpreadsheet();
-  var sheetSiswa = ss.getSheetByName(SHEET_NAMES.SISWA);
-  var sheetLog = ss.getSheetByName(SHEET_NAMES.LOG);
+  var sheetSiswa = getSheetSafely(ss, SHEET_NAMES.SISWA);
+  var sheetLog = getSheetSafely(ss, SHEET_NAMES.LOG);
   
   var dataSiswa = sheetSiswa.getDataRange().getValues();
   var rowIndex = -1;
@@ -237,7 +248,7 @@ function kurangiPelanggaran(payload) {
 
 function tambahSiswa(payload) {
   var ss = getSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAMES.SISWA);
+  var sheet = getSheetSafely(ss, SHEET_NAMES.SISWA);
   var data = sheet.getDataRange().getValues();
   
   for (var i = 1; i < data.length; i++) {
