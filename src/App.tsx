@@ -132,17 +132,10 @@ export default function App() {
     namaPetugas: string;
     rolePetugas: string;
   }) => {
-    // Update totalPoin in Siswa
     setSiswaList((prev) =>
-      prev.map((s) => {
-        if (s.nis === data.nis) {
-          return { ...s, totalPoin: s.totalPoin + data.bobotPoin };
-        }
-        return s;
-      })
+      prev.map((s) => (s.nis === data.nis ? { ...s, totalPoin: s.totalPoin + data.bobotPoin } : s))
     );
 
-    // Append to LogData
     const newLog: LogData = {
       id: 'LOG' + (logs.length + 101),
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
@@ -154,9 +147,27 @@ export default function App() {
       namaPetugas: data.namaPetugas,
       rolePetugas: data.rolePetugas as Role,
     };
-
     setLogs((prev) => [newLog, ...prev]);
-    showToast(`Berhasil menambahkan ${data.bobotPoin} poin untuk siswa ${data.namaSiswa}.`);
+
+    try {
+      const res = await apiFetch('tambahPelanggaran', {
+        nis: data.nis,
+        namaSiswa: data.namaSiswa,
+        jenisPelanggaran: data.jenisPelanggaran,
+        poin: data.bobotPoin,
+        keterangan: data.keterangan,
+        namaPetugas: data.namaPetugas,
+        rolePetugas: data.rolePetugas
+      });
+      
+      if (res.success) {
+        showToast(`Berhasil menambahkan ${data.bobotPoin} poin untuk ${data.namaSiswa}.`);
+      } else {
+        showToast("Gagal menyimpan ke database: " + res.message, 'error');
+      }
+    } catch (error) {
+      showToast("Koneksi API bermasalah", 'error');
+    }
   };
 
   // 2. KURANGI POIN PELANGGARAN (TIM TATIB & ADMIN)
@@ -174,12 +185,7 @@ export default function App() {
     }
 
     setSiswaList((prev) =>
-      prev.map((s) => {
-        if (s.nis === data.nis) {
-          return { ...s, totalPoin: Math.max(0, s.totalPoin - data.jumlahPoin) };
-        }
-        return s;
-      })
+      prev.map((s) => (s.nis === data.nis ? { ...s, totalPoin: Math.max(0, s.totalPoin - data.jumlahPoin) } : s))
     );
 
     const newLog: LogData = {
@@ -193,9 +199,26 @@ export default function App() {
       namaPetugas: data.namaPetugas,
       rolePetugas: data.rolePetugas as Role,
     };
-
     setLogs((prev) => [newLog, ...prev]);
-    showToast(`Berhasil mengurangi ${data.jumlahPoin} poin untuk siswa ${data.namaSiswa}.`);
+
+    try {
+      const res = await apiFetch('kurangiPelanggaran', {
+        nis: data.nis,
+        namaSiswa: data.namaSiswa,
+        poin: data.jumlahPoin,
+        keterangan: data.keterangan,
+        namaPetugas: data.namaPetugas,
+        rolePetugas: data.rolePetugas
+      });
+      
+      if (res.success) {
+        showToast(`Berhasil mengurangi ${data.jumlahPoin} poin untuk ${data.namaSiswa}.`);
+      } else {
+        showToast("Gagal menyimpan ke database: " + res.message, 'error');
+      }
+    } catch (error) {
+      showToast("Koneksi API bermasalah", 'error');
+    }
   };
 
   // 3. ADMIN: CRUD USER
