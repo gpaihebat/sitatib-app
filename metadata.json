@@ -1,0 +1,6 @@
+{
+  "name": "SITATIB SMAN 1 Yosowilangun",
+  "description": "Sistem Informasi Pelanggaran dan Tata Tertib Siswa SMAN 1 Yosowilangun berbasis Google Apps Script & Google Sheets",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
